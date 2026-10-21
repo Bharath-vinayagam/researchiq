@@ -75,10 +75,10 @@ export default function Graph({ data, height = 420 }) {
         .selectAll('circle')
         .data(nodes)
         .enter().append('circle')
-        .attr('r', d => SIZES[d.type] || 9)
-        .attr('fill', d => COLORS[d.type] || '#8b949e')
-        .attr('stroke', '#07090f')
-        .attr('stroke-width', 2)
+        .attr('r', d => d.size || SIZES[d.type] || 9)
+        .attr('fill', d => d.is_top_influential ? '#58a6ff' : (COLORS[d.type] || '#8b949e'))
+        .attr('stroke', d => d.is_top_influential ? '#fff' : '#07090f')
+        .attr('stroke-width', d => d.is_top_influential ? 2.5 : 2)
         .style('cursor', 'pointer')
         .call(
           d3.drag()
@@ -131,6 +131,9 @@ export default function Graph({ data, height = 420 }) {
           html += `${lbl.substring(0, 80)}${lbl.length > 80 ? '…' : ''}`
           if (d.year) html += `<br/><span style="color:#8b949e">Year: ${d.year}</span>`
           if (d.citations) html += `<br/><span style="color:#8b949e">Citations: ${d.citations.toLocaleString()}</span>`
+          if (d.pagerank !== undefined) html += `<br/><span style="color:#58a6ff">PageRank: ${d.pagerank}</span>`
+          if (d.betweenness !== undefined) html += `<br/><span style="color:#bc8cff">Betweenness: ${d.betweenness}</span>`
+          if (d.community !== undefined) html += `<br/><span style="color:#e3b341">Cluster: ${d.community}</span>`
           if (d.stars) html += `<br/><span style="color:#e3b341">⭐ ${d.stars.toLocaleString()}</span>`
           tip.html(html)
             .style('opacity', '1')

@@ -65,6 +65,14 @@ export const api = {
   pdfChat: (question)             => post('/pdf/chat', { question }),
   pdfFetchArxiv: (arxiv_id)       => post('/pdf/fetch_arxiv', { arxiv_id }),
   pdfUpload: (file)               => upload('/pdf/upload', file),
+  graphAnalytics: (params = {})   => {
+    const q = new URLSearchParams()
+    if (params.topic) q.append('topic', params.topic)
+    if (params.metric) q.append('metric', params.metric)
+    if (params.limit) q.append('limit', params.limit)
+    return get(`/graph/analytics?${q.toString()}`)
+  },
+  graphSyncMetrics: ()            => post('/graph/sync_metrics', {}),
 }
 
 

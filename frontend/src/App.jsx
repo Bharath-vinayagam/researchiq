@@ -8,6 +8,7 @@ import Compare from './pages/Compare'
 import Chat from './pages/Chat'
 import Roadmap from './pages/Roadmap'
 import History from './pages/History'
+import GraphAnalytics from './pages/GraphAnalytics'
 
 // Shared context so any tab can read/write the global topic
 export const TopicContext = createContext({ topic: '', setTopic: () => {} })
@@ -15,6 +16,7 @@ export const useTopicContext = () => useContext(TopicContext)
 
 const TABS = [
   { id: 'discover', label: '🔍 Discover' },
+  { id: 'graph',    label: '🕸️ Graph Intel' },
   { id: 'review',   label: '📖 Review' },
   { id: 'survey',   label: '📚 Survey' },
   { id: 'gaps',     label: '💡 Gaps' },
@@ -152,6 +154,7 @@ export default function App() {
         <main style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
           {[
             ['discover', <Discover />],
+            ['graph',    <GraphAnalytics />],
             ['review',   <Review />],
             ['survey',   <Survey />],
             ['gaps',     <Gaps />],

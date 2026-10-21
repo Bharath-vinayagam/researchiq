@@ -12,6 +12,7 @@ from app.db.database import (
     get_report_by_id
 )
 from app.db import neo4j_client, mongo_client
+from app.analytics.graph_analytics import compute_graph_analytics, write_metrics_to_neo4j
 
 router = APIRouter(prefix="/api")
 
@@ -287,6 +288,17 @@ def get_pdf_status():
 def clear_pdfs():
     pdf_store.clear()
     return {"success": True, "stats": pdf_store.get_stats()}
+
+
+# ── Graph Algorithms & Centrality Analytics ───────────────────────────────
+@router.get("/graph/analytics")
+def get_graph_analytics(topic: str = None, metric: str = "pagerank", limit: int = 30):
+    return compute_graph_analytics(topic=topic, metric=metric, limit=limit)
+
+@router.post("/graph/sync_metrics")
+def sync_graph_metrics():
+    return write_metrics_to_neo4j()
+
 
 
 
