@@ -5,6 +5,7 @@ import PaperCard from '../components/PaperCard'
 import Graph from '../components/Graph'
 import Spinner from '../components/Spinner'
 import RepoList from '../components/RepoList'
+import { ModelCard, DatasetCard } from '../components/HFArtifacts'
 
 export default function Discover() {
   const { topic: globalTopic, setTopic: setGlobalTopic } = useTopicContext()
@@ -77,6 +78,14 @@ export default function Discover() {
               style={{ background: activeTab === 'papers' ? '#21262d' : 'none', border: `1px solid ${activeTab === 'papers' ? '#58a6ff' : '#21262d'}`, borderRadius: 6, color: activeTab === 'papers' ? '#58a6ff' : '#8b949e', padding: '5px 14px', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
               📄 Papers ({result.total})
             </button>
+            <button onClick={() => setActiveTab('models')}
+              style={{ background: activeTab === 'models' ? '#21262d' : 'none', border: `1px solid ${activeTab === 'models' ? '#ff9d00' : '#21262d'}`, borderRadius: 6, color: activeTab === 'models' ? '#ff9d00' : '#8b949e', padding: '5px 14px', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
+              🤗 HF Models ({result.models?.length || 0})
+            </button>
+            <button onClick={() => setActiveTab('datasets')}
+              style={{ background: activeTab === 'datasets' ? '#21262d' : 'none', border: `1px solid ${activeTab === 'datasets' ? '#00b4d8' : '#21262d'}`, borderRadius: 6, color: activeTab === 'datasets' ? '#00b4d8' : '#8b949e', padding: '5px 14px', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
+              📊 Datasets ({result.datasets?.length || 0})
+            </button>
             <button onClick={() => setActiveTab('repos')}
               style={{ background: activeTab === 'repos' ? '#21262d' : 'none', border: `1px solid ${activeTab === 'repos' ? '#bc8cff' : '#21262d'}`, borderRadius: 6, color: activeTab === 'repos' ? '#bc8cff' : '#8b949e', padding: '5px 14px', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
               🔧 GitHub Repos ({result.repos?.length || 0})
@@ -111,6 +120,32 @@ export default function Discover() {
                     ? <div style={{ color: '#6e7681', fontSize: 13, padding: 20, textAlign: 'center' }}>No papers found. Try different keywords.</div>
                     : result.papers.map((p, i) => <PaperCard key={i} paper={p} />)
                   }
+                </div>
+              )}
+
+              {/* Models tab */}
+              {activeTab === 'models' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {result.models?.length === 0 ? (
+                    <div style={{ color: '#6e7681', fontSize: 13, padding: 20, textAlign: 'center' }}>
+                      No Hugging Face models found matching this topic.
+                    </div>
+                  ) : (
+                    result.models.map((m, i) => <ModelCard key={i} model={m} />)
+                  )}
+                </div>
+              )}
+
+              {/* Datasets tab */}
+              {activeTab === 'datasets' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {result.datasets?.length === 0 ? (
+                    <div style={{ color: '#6e7681', fontSize: 13, padding: 20, textAlign: 'center' }}>
+                      No Hugging Face benchmark datasets found matching this topic.
+                    </div>
+                  ) : (
+                    result.datasets.map((d, i) => <DatasetCard key={i} dataset={d} />)
+                  )}
                 </div>
               )}
 

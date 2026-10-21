@@ -73,6 +73,8 @@ export const api = {
     return get(`/graph/analytics?${q.toString()}`)
   },
   graphSyncMetrics: ()            => post('/graph/sync_metrics', {}),
+  hfModels: (query, limit = 8)   => get(`/hf/models?query=${encodeURIComponent(query)}&limit=${limit}`),
+  hfDatasets: (query, limit = 8) => get(`/hf/datasets?query=${encodeURIComponent(query)}&limit=${limit}`),
 }
 
 

@@ -1,6 +1,6 @@
 import networkx as nx
 
-def build_knowledge_graph(topic: str, papers: list, repos: list = []) -> dict:
+def build_knowledge_graph(topic: str, papers: list, repos: list = [], models: list = [], datasets: list = []) -> dict:
     G = nx.DiGraph()
     topic_node = f"TOPIC:{topic}"
     G.add_node(topic_node, type="topic", label=topic)
@@ -22,6 +22,18 @@ def build_knowledge_graph(topic: str, papers: list, repos: list = []) -> dict:
         if not name: continue
         G.add_node(name, type="repo", url=r.get("url",""), stars=r.get("stars",0))
         G.add_edge(topic_node, name, relation="implementation")
+
+    for m in models:
+        mid = m.get("id") or m.get("name","")
+        if not mid: continue
+        G.add_node(mid, type="model", url=m.get("url",""), downloads=m.get("downloads",0), likes=m.get("likes",0))
+        G.add_edge(topic_node, mid, relation="model")
+
+    for d in datasets:
+        did = d.get("id") or d.get("name","")
+        if not did: continue
+        G.add_node(did, type="dataset", url=d.get("url",""), downloads=d.get("downloads",0))
+        G.add_edge(topic_node, did, relation="dataset")
 
     try:
         scores = nx.degree_centrality(G)

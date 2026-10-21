@@ -65,19 +65,24 @@ def init_neo4j_schema():
             session.run("CREATE CONSTRAINT IF NOT EXISTS FOR (t:Topic) REQUIRE t.name IS UNIQUE")
             session.run("CREATE CONSTRAINT IF NOT EXISTS FOR (a:Author) REQUIRE a.name IS UNIQUE")
             session.run("CREATE CONSTRAINT IF NOT EXISTS FOR (r:Repository) REQUIRE r.name IS UNIQUE")
+            session.run("CREATE CONSTRAINT IF NOT EXISTS FOR (m:Model) REQUIRE m.id IS UNIQUE")
+            session.run("CREATE CONSTRAINT IF NOT EXISTS FOR (d:Dataset) REQUIRE d.id IS UNIQUE")
             logger.info("Neo4j schema constraints ensured.")
     except Exception as e:
         logger.debug(f"Neo4j schema init skipped (likely offline): {e}")
 
-def save_knowledge_graph_to_neo4j(topic: str, papers: List[Dict[str, Any]], repos: List[Dict[str, Any]] = None) -> bool:
+def save_knowledge_graph_to_neo4j(topic: str, papers: List[Dict[str, Any]], repos: List[Dict[str, Any]] = None,
+                                  models: List[Dict[str, Any]] = None, datasets: List[Dict[str, Any]] = None) -> bool:
     """
-    Ingest a research topic, its retrieved papers, authors, and GitHub implementations
-    into the Neo4j graph database.
+    Ingest a research topic, its retrieved papers, authors, GitHub implementations,
+    Hugging Face models, and datasets into the Neo4j graph database.
     """
     driver = get_neo4j_driver()
     if not driver:
         return False
     repos = repos or []
+    models = models or []
+    datasets = datasets or []
     try:
         with _get_session(driver) as session:
             # 1. Merge Topic
@@ -150,6 +155,58 @@ def save_knowledge_graph_to_neo4j(topic: str, papers: List[Dict[str, Any]], repo
                         "stars": stars, "language": language, "description": description
                     }
                 )
+            # 4. Merge Hugging Face Models
+            for m in models:
+                mid = m.get("id")
+                if not mid:
+                    continue
+                mname = m.get("name") or mid
+                murl = m.get("url") or f"https://huggingface.co/{mid}"
+                downloads = int(m.get("downloads") or 0)
+                likes = int(m.get("likes") or 0)
+                task = m.get("pipeline_tag") or "general"
+                author = m.get("author") or ""
+
+                session.run(
+                    """
+                    MATCH (t:Topic {name: $topic})
+                    MERGE (model:Model {id: $mid})
+                    ON CREATE SET model.name = $name, model.url = $url, model.downloads = $downloads,
+                                  model.likes = $likes, model.task = $task, model.author = $author,
+                                  model.created_at = datetime()
+                    ON MATCH SET model.downloads = $downloads, model.likes = $likes, model.url = $url
+                    MERGE (t)-[:HAS_MODEL]->(model)
+                    """,
+                    {
+                        "topic": topic, "mid": mid, "name": mname, "url": murl,
+                        "downloads": downloads, "likes": likes, "task": task, "author": author
+                    }
+                )
+
+            # 5. Merge Hugging Face Datasets
+            for d in datasets:
+                did = d.get("id")
+                if not did:
+                    continue
+                dname = d.get("name") or did
+                durl = d.get("url") or f"https://huggingface.co/datasets/{did}"
+                downloads = int(d.get("downloads") or 0)
+                likes = int(d.get("likes") or 0)
+
+                session.run(
+                    """
+                    MATCH (t:Topic {name: $topic})
+                    MERGE (ds:Dataset {id: $did})
+                    ON CREATE SET ds.name = $name, ds.url = $url, ds.downloads = $downloads,
+                                  ds.likes = $likes, ds.created_at = datetime()
+                    ON MATCH SET ds.downloads = $downloads, ds.likes = $likes, ds.url = $url
+                    MERGE (t)-[:USES_DATASET]->(ds)
+                    """,
+                    {
+                        "topic": topic, "did": did, "name": dname, "url": durl,
+                        "downloads": downloads, "likes": likes
+                    }
+                )
         return True
     except Exception as e:
         logger.warning(f"Error saving knowledge graph to Neo4j: {e}")
@@ -214,8 +271,11 @@ def get_knowledge_graph_from_neo4j(topic: str) -> Optional[Dict[str, Any]]:
                 OPTIONAL MATCH (t)-[:COVERS]->(p:Paper)
                 OPTIONAL MATCH (a:Author)-[:AUTHORED]->(p)
                 OPTIONAL MATCH (t)-[:HAS_IMPLEMENTATION]->(r:Repository)
+                OPTIONAL MATCH (t)-[:HAS_MODEL]->(m:Model)
+                OPTIONAL MATCH (t)-[:USES_DATASET]->(d:Dataset)
                 RETURN t, collect(DISTINCT p) as papers, collect(DISTINCT a) as authors,
-                       collect(DISTINCT r) as repos
+                       collect(DISTINCT r) as repos, collect(DISTINCT m) as models,
+                       collect(DISTINCT d) as datasets
                 """,
                 {"topic": topic}
             ).single()
@@ -282,6 +342,37 @@ def get_knowledge_graph_from_neo4j(topic: str) -> Optional[Dict[str, Any]]:
                         "stars": r.get("stars", 0)
                     })
                     links.append({"source": topic_id, "target": rname, "relation": "implementation"})
+
+            for m in (result.get("models") or []):
+                if not m:
+                    continue
+                mid = m.get("id") or m.get("name")
+                if mid and mid not in node_ids:
+                    node_ids.add(mid)
+                    nodes.append({
+                        "id": mid,
+                        "label": m.get("name") or mid,
+                        "type": "model",
+                        "url": m.get("url", ""),
+                        "downloads": m.get("downloads", 0),
+                        "likes": m.get("likes", 0)
+                    })
+                    links.append({"source": topic_id, "target": mid, "relation": "model"})
+
+            for d in (result.get("datasets") or []):
+                if not d:
+                    continue
+                did = d.get("id") or d.get("name")
+                if did and did not in node_ids:
+                    node_ids.add(did)
+                    nodes.append({
+                        "id": did,
+                        "label": d.get("name") or did,
+                        "type": "dataset",
+                        "url": d.get("url", ""),
+                        "downloads": d.get("downloads", 0)
+                    })
+                    links.append({"source": topic_id, "target": did, "relation": "dataset"})
 
             return {"directed": True, "multigraph": False, "graph": {}, "nodes": nodes, "links": links}
     except Exception as e:

@@ -4,6 +4,7 @@ from app.rag.pdf_engine import pdf_store, download_arxiv_pdf
 from app.mcp.arxiv import ArxivMCP
 from app.mcp.semantic_scholar import SemanticScholarMCP
 from app.mcp.github import GitHubMCP
+from app.mcp.huggingface import HuggingFaceMCP
 from app.services.graph import build_knowledge_graph, build_citation_graph
 from app.rag.vectorstore import add_papers, query as rag_query, count as rag_count
 from app.agents import research_agent as agent
@@ -19,6 +20,7 @@ router = APIRouter(prefix="/api")
 arxiv   = ArxivMCP()
 scholar = SemanticScholarMCP()
 github  = GitHubMCP()
+hf      = HuggingFaceMCP()
 
 
 # ── Request models ────────────────────────────────────────────────────────
@@ -70,22 +72,25 @@ async def search(req: SearchReq):
         arxiv_res = await arxiv.search(req.query, req.max_results)
     if "semantic_scholar" in req.sources:
         scholar_res = await scholar.search(req.query, req.max_results)
-    # Always fetch GitHub repos regardless of sources toggle
+    # Always fetch GitHub repos and Hugging Face models & datasets
     gh_res = await github.search(req.query, max_results=8)
+    hf_res = await hf.search_all(req.query, max_models=6, max_datasets=6)
+    models = hf_res.get("models", [])
+    datasets = hf_res.get("datasets", [])
 
     papers = _merge([arxiv_res, scholar_res])
     add_papers(papers)
     save_search(req.query, papers, gh_res)
 
-    # Persist knowledge graph in Neo4j
-    neo4j_client.save_knowledge_graph_to_neo4j(req.query, papers, gh_res)
+    # Persist knowledge graph in Neo4j (Papers, Authors, Repos, HF Models, Datasets)
+    neo4j_client.save_knowledge_graph_to_neo4j(req.query, papers, gh_res, models, datasets)
 
     # Retrieve from Neo4j if available, otherwise fallback to NetworkX in-memory
     neo4j_graph = neo4j_client.get_knowledge_graph_from_neo4j(req.query)
-    graph = neo4j_graph or build_knowledge_graph(req.query, papers, gh_res)
+    graph = neo4j_graph or build_knowledge_graph(req.query, papers, gh_res, models, datasets)
 
     return {
-        "papers": papers, "repos": gh_res,
+        "papers": papers, "repos": gh_res, "models": models, "datasets": datasets,
         "graph": graph, "total": len(papers), "rag_count": rag_count(),
         "graph_source": "neo4j" if neo4j_graph else "networkx"
     }
@@ -298,6 +303,17 @@ def get_graph_analytics(topic: str = None, metric: str = "pagerank", limit: int 
 @router.post("/graph/sync_metrics")
 def sync_graph_metrics():
     return write_metrics_to_neo4j()
+
+
+# ── Hugging Face Hub MCP Endpoints ────────────────────────────────────────
+@router.get("/hf/models")
+async def get_hf_models(query: str, limit: int = 8):
+    return await hf.search_models(query, limit)
+
+@router.get("/hf/datasets")
+async def get_hf_datasets(query: str, limit: int = 8):
+    return await hf.search_datasets(query, limit)
+
 
 
 

@@ -1,7 +1,15 @@
+import os
 import aiohttp
 
 class SemanticScholarMCP:
     BASE = "https://api.semanticscholar.org/graph/v1"
+
+    def _headers(self):
+        headers = {"User-Agent": "ResearchIQ/1.0 (academic research platform)"}
+        api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
+        if api_key:
+            headers["x-api-key"] = api_key.strip()
+        return headers
 
     async def search(self, query: str, max_results: int = 10) -> list:
         url = f"{self.BASE}/paper/search"
@@ -9,7 +17,7 @@ class SemanticScholarMCP:
                   "fields": "title,abstract,authors,year,citationCount,externalIds,url"}
         try:
             async with aiohttp.ClientSession() as s:
-                async with s.get(url, params=params, timeout=aiohttp.ClientTimeout(total=20)) as r:
+                async with s.get(url, params=params, headers=self._headers(), timeout=aiohttp.ClientTimeout(total=20)) as r:
                     if r.status != 200: return []
                     data = await r.json()
             results = []
@@ -33,6 +41,7 @@ class SemanticScholarMCP:
         try:
             async with aiohttp.ClientSession() as s:
                 async with s.get(search_url, params={"query": title, "limit": 1},
+                                 headers=self._headers(),
                                  timeout=aiohttp.ClientTimeout(total=15)) as r:
                     if r.status != 200: return {}
                     data = await r.json()
@@ -40,6 +49,7 @@ class SemanticScholarMCP:
                 pid = data["data"][0]["paperId"]
                 async with s.get(f"{self.BASE}/paper/{pid}",
                                  params={"fields": "citations.title,references.title,authors,citationCount"},
+                                 headers=self._headers(),
                                  timeout=aiohttp.ClientTimeout(total=15)) as r2:
                     if r2.status == 200: return await r2.json()
         except Exception: pass

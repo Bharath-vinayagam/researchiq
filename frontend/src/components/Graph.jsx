@@ -4,9 +4,11 @@ import * as d3 from 'd3'
 const COLORS = {
   topic: '#58a6ff', paper: '#8b949e', repo: '#bc8cff',
   author: '#e3b341', root: '#3fb950', cited_by: '#f85149', reference: '#58a6ff',
+  model: '#ff9d00', dataset: '#00b4d8',
 }
 const SIZES = {
   topic: 16, paper: 9, repo: 11, author: 7, root: 16, cited_by: 8, reference: 8,
+  model: 11, dataset: 10,
 }
 
 export default function Graph({ data, height = 420 }) {
@@ -189,7 +191,7 @@ export default function Graph({ data, height = 420 }) {
       </div>
       {hasNodes && (
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginTop: 8, fontSize: 11, color: '#8b949e' }}>
-          {[['#58a6ff', 'Topic'], ['#8b949e', 'Paper'], ['#bc8cff', 'Repo'], ['#e3b341', 'Author'], ['#3fb950', 'Root']].map(([c, l]) => (
+          {[['#58a6ff', 'Topic'], ['#8b949e', 'Paper'], ['#ff9d00', 'Model'], ['#00b4d8', 'Dataset'], ['#bc8cff', 'Repo'], ['#e3b341', 'Author'], ['#3fb950', 'Root']].map(([c, l]) => (
             <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: c, display: 'inline-block' }} />
               {l}
