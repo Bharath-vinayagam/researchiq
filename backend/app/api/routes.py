@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
+from app.rag.pdf_engine import pdf_store, download_arxiv_pdf
 from app.mcp.arxiv import ArxivMCP
 from app.mcp.semantic_scholar import SemanticScholarMCP
 from app.mcp.github import GitHubMCP
@@ -42,6 +43,12 @@ class CitationReq(BaseModel):
 class MultiHopReq(BaseModel):
     title: str
     hops: int = 2
+
+class ArxivPdfReq(BaseModel):
+    arxiv_id: str
+
+class PdfChatReq(BaseModel):
+    question: str
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────
@@ -235,5 +242,51 @@ def nosql_status():
             "role": "Local baseline persistence and offline fallback"
         }
     }
+
+
+# ── Full PDF Deep RAG ─────────────────────────────────────────────────────
+@router.post("/pdf/upload")
+async def upload_pdf(file: UploadFile = File(...)):
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(400, "Only PDF files are supported")
+    content = await file.read()
+    try:
+        info = pdf_store.add_pdf_bytes(content, file.filename)
+        return {"success": True, "info": info, "stats": pdf_store.get_stats()}
+    except Exception as e:
+        raise HTTPException(500, f"Error processing PDF: {e}")
+
+@router.post("/pdf/fetch_arxiv")
+async def fetch_arxiv_pdf(req: ArxivPdfReq):
+    pdf_bytes = await download_arxiv_pdf(req.arxiv_id)
+    if not pdf_bytes:
+        raise HTTPException(404, f"Could not fetch PDF for ArXiv ID: {req.arxiv_id}")
+    filename = f"{req.arxiv_id.strip().split('/')[-1]}.pdf"
+    info = pdf_store.add_pdf_bytes(pdf_bytes, filename)
+    return {"success": True, "info": info, "stats": pdf_store.get_stats()}
+
+@router.post("/pdf/chat")
+async def chat_pdf(req: PdfChatReq):
+    chunks = pdf_store.search(req.question, top_k=6)
+    if not chunks:
+        return {
+            "answer": "No relevant sections found in the loaded PDF(s). Please make sure a PDF is uploaded or try another question.",
+            "chunks": []
+        }
+    answer = await agent.answer_pdf_question(req.question, chunks)
+    return {
+        "answer": answer,
+        "chunks": [{"page": c["page"], "paper": c["paper"], "text": c["text"][:300]} for c in chunks]
+    }
+
+@router.get("/pdf/status")
+def get_pdf_status():
+    return pdf_store.get_stats()
+
+@router.delete("/pdf/clear")
+def clear_pdfs():
+    pdf_store.clear()
+    return {"success": True, "stats": pdf_store.get_stats()}
+
 
 

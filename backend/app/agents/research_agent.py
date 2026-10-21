@@ -210,3 +210,29 @@ async def generate_roadmap(topic: str, papers: list) -> dict:
         "phases": [], "key_skills": [], "resources": [],
     }
 
+async def answer_pdf_question(question: str, chunks: list) -> str:
+    if not chunks:
+        return "No relevant sections found in the loaded PDF."
+
+    context_lines = []
+    for c in chunks:
+        context_lines.append(f"--- [Page {c.get('page')}] ({c.get('paper', 'PDF')}) ---\n{c.get('text', '')}")
+    context = "\n\n".join(context_lines)
+
+    prompt = PromptTemplate.from_template(
+        "You are an expert AI research scientist reading a research paper in depth.\n\n"
+        "Here are verified excerpts directly extracted from the PDF pages:\n{context}\n\n"
+        "Question: {question}\n\n"
+        "Instructions:\n"
+        "1. Give a thorough, precise, and well-structured answer.\n"
+        "2. For every fact, formula, result, or concept, cite the page like: [Page 3], [Page 7].\n"
+        "3. Base your answer strictly on the excerpts. If the excerpts do not contain the answer, explicitly state that."
+    )
+    chain = prompt | _llm(temp=0.2)
+    try:
+        r = await chain.ainvoke({"context": context, "question": question})
+        return r.content.strip()
+    except Exception as e:
+        return f"Could not answer from PDF: {e}"
+
+

@@ -15,7 +15,30 @@ async function post(path, body) {
 
 async function get(path) {
   const r = await fetch(BASE + path)
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}))
+    throw new Error(e.detail || `HTTP ${r.status}`)
+  }
+  return r.json()
+}
+
+async function del(path) {
+  const r = await fetch(BASE + path, { method: 'DELETE' })
   if (!r.ok) throw new Error(`HTTP ${r.status}`)
+  return r.json()
+}
+
+async function upload(path, file) {
+  const fd = new FormData()
+  fd.append('file', file)
+  const r = await fetch(BASE + path, {
+    method: 'POST',
+    body: fd,
+  })
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}))
+    throw new Error(e.detail || `HTTP ${r.status}`)
+  }
   return r.json()
 }
 
@@ -37,5 +60,11 @@ export const api = {
   neo4jGraph: (topic)             => get(`/neo4j/graph/${encodeURIComponent(topic)}`),
   mongoStatus: ()                 => get('/mongodb/status'),
   nosqlStatus: ()                 => get('/nosql/status'),
+  pdfStatus: ()                   => get('/pdf/status'),
+  pdfClear: ()                    => del('/pdf/clear'),
+  pdfChat: (question)             => post('/pdf/chat', { question }),
+  pdfFetchArxiv: (arxiv_id)       => post('/pdf/fetch_arxiv', { arxiv_id }),
+  pdfUpload: (file)               => upload('/pdf/upload', file),
 }
+
 
