@@ -84,6 +84,16 @@ export default function Discover() {
             <div style={{ background: '#161b22', border: '1px solid #21262d', borderRadius: 6, padding: '5px 12px', fontSize: 12, color: '#6e7681' }}>
               🧠 {result.rag_count} in RAG
             </div>
+            {result.graph_source && (
+              <div style={{
+                background: result.graph_source === 'neo4j' ? 'rgba(63,185,80,0.1)' : 'rgba(88,166,255,0.1)',
+                border: `1px solid ${result.graph_source === 'neo4j' ? 'rgba(63,185,80,0.3)' : 'rgba(88,166,255,0.3)'}`,
+                borderRadius: 6, padding: '5px 12px', fontSize: 12,
+                color: result.graph_source === 'neo4j' ? '#3fb950' : '#58a6ff'
+              }}>
+                {result.graph_source === 'neo4j' ? '🌿 Neo4j Graph' : '📊 NetworkX Graph'}
+              </div>
+            )}
             <button onClick={() => setShowGraph(p => !p)}
               style={{ background: 'none', border: '1px solid #30363d', borderRadius: 6, color: '#8b949e', padding: '5px 12px', fontSize: 12, cursor: 'pointer', marginLeft: 'auto' }}>
               {showGraph ? '⊟ Hide Graph' : '⊞ Show Graph'}

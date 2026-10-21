@@ -32,4 +32,8 @@ export const api = {
   reports:   ()                   => get('/reports'),
   searches:  ()                   => get('/searches'),
   ragCount:  ()                   => get('/rag/count'),
+  neo4jStatus: ()                 => get('/neo4j/status'),
+  neo4jMultihop: (title, hops = 2) => post('/neo4j/citations/multihop', { title, hops }),
+  neo4jGraph: (topic)             => get(`/neo4j/graph/${encodeURIComponent(topic)}`),
 }
+

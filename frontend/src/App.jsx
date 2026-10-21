@@ -1,4 +1,5 @@
-import React, { useState, createContext, useContext } from 'react'
+import React, { useState, useEffect, createContext, useContext } from 'react'
+import { api } from './services/api'
 import Discover from './pages/Discover'
 import Review from './pages/Review'
 import Survey from './pages/Survey'
@@ -26,6 +27,11 @@ const TABS = [
 export default function App() {
   const [tab, setTab] = useState('discover')
   const [topic, setTopic] = useState('')
+  const [neo4jInfo, setNeo4jInfo] = useState(null)
+
+  useEffect(() => {
+    api.neo4jStatus().then(data => setNeo4jInfo(data)).catch(() => {})
+  }, [])
 
   return (
     <TopicContext.Provider value={{ topic, setTopic }}>
@@ -36,8 +42,38 @@ export default function App() {
           padding: '0 16px', height: 50, display: 'flex', alignItems: 'center',
           gap: 12, flexShrink: 0, zIndex: 100,
         }}>
-          <div style={{ fontWeight: 700, fontSize: 15, color: '#58a6ff', flexShrink: 0 }}>
-            ⚗️ ResearchIQ
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+            <span style={{ fontWeight: 700, fontSize: 15, color: '#58a6ff' }}>
+              ⚗️ ResearchIQ
+            </span>
+            {neo4jInfo && (
+              <span
+                title={
+                  neo4jInfo.connected
+                    ? `Connected to Neo4j (${neo4jInfo.uri})\nPapers: ${neo4jInfo.stats?.papers || 0}, Relationships: ${neo4jInfo.stats?.relationships || 0}`
+                    : `Neo4j Offline (${neo4jInfo.uri || 'bolt://localhost:7687'}) - Using in-memory NetworkX`
+                }
+                style={{
+                  fontSize: 11,
+                  padding: '2px 8px',
+                  borderRadius: 12,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: neo4jInfo.connected ? 'rgba(63,185,80,0.12)' : 'rgba(139,148,158,0.12)',
+                  color: neo4jInfo.connected ? '#3fb950' : '#8b949e',
+                  border: `1px solid ${neo4jInfo.connected ? 'rgba(63,185,80,0.3)' : 'rgba(139,148,158,0.25)'}`,
+                  cursor: 'help'
+                }}
+              >
+                <span style={{
+                  width: 6, height: 6, borderRadius: '50%',
+                  background: neo4jInfo.connected ? '#3fb950' : '#8b949e',
+                  display: 'inline-block'
+                }}></span>
+                Neo4j {neo4jInfo.connected ? 'Active' : 'Offline'}
+              </span>
+            )}
           </div>
 
           {/* Global topic bar */}

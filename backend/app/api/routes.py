@@ -10,6 +10,7 @@ from app.db.database import (
     save_report, save_search, get_reports, get_searches,
     get_report_by_id
 )
+from app.db import neo4j_client
 
 router = APIRouter(prefix="/api")
 
@@ -38,6 +39,10 @@ class ChatReq(BaseModel):
 class CitationReq(BaseModel):
     title: str
 
+class MultiHopReq(BaseModel):
+    title: str
+    hops: int = 2
+
 
 # ── Helpers ───────────────────────────────────────────────────────────────
 def _merge(lists):
@@ -64,10 +69,17 @@ async def search(req: SearchReq):
     add_papers(papers)
     save_search(req.query, papers, gh_res)
 
-    graph = build_knowledge_graph(req.query, papers, gh_res)
+    # Persist knowledge graph in Neo4j
+    neo4j_client.save_knowledge_graph_to_neo4j(req.query, papers, gh_res)
+
+    # Retrieve from Neo4j if available, otherwise fallback to NetworkX in-memory
+    neo4j_graph = neo4j_client.get_knowledge_graph_from_neo4j(req.query)
+    graph = neo4j_graph or build_knowledge_graph(req.query, papers, gh_res)
+
     return {
         "papers": papers, "repos": gh_res,
-        "graph": graph, "total": len(papers), "rag_count": rag_count()
+        "graph": graph, "total": len(papers), "rag_count": rag_count(),
+        "graph_source": "neo4j" if neo4j_graph else "networkx"
     }
 
 
@@ -75,6 +87,7 @@ async def search(req: SearchReq):
 @router.post("/citations")
 async def get_citations(req: CitationReq):
     data = await scholar.get_citations(req.title)
+    neo4j_client.save_citations_to_neo4j(req.title, data)
     graph = build_citation_graph(req.title, data)
     return {"data": data, "graph": graph}
 
@@ -176,3 +189,24 @@ def searches():
 @router.get("/rag/count")
 def rag_size():
     return {"count": rag_count()}
+
+
+# ── Neo4j Graph Database ──────────────────────────────────────────────────
+@router.get("/neo4j/status")
+def neo4j_status():
+    return neo4j_client.get_neo4j_stats()
+
+@router.post("/neo4j/citations/multihop")
+def neo4j_multihop(req: MultiHopReq):
+    graph = neo4j_client.get_multi_hop_citations_from_neo4j(req.title, req.hops)
+    if not graph:
+        raise HTTPException(404, "No citation paths found in Neo4j for this paper")
+    return graph
+
+@router.get("/neo4j/graph/{topic}")
+def neo4j_topic_graph(topic: str):
+    g = neo4j_client.get_knowledge_graph_from_neo4j(topic)
+    if not g:
+        raise HTTPException(404, f"No graph found in Neo4j for topic: {topic}")
+    return g
+

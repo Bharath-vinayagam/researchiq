@@ -537,9 +537,9 @@ Find GitHub implementations related to Diffusion Models
 
 ---
 
-# 👩‍💻 Author
+# 👨‍💻 Author
 
-**Raveena V**
+**Bharath**
 
 B.Tech Computer Science and Engineering
 
