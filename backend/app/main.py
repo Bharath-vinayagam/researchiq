@@ -8,9 +8,11 @@ from fastapi.staticfiles import StaticFiles
 from app.api.routes import router
 from app.db.database import init_db
 from app.db.neo4j_client import init_neo4j_schema
+from app.db.mongo_client import init_mongo_schema
 
 init_db()
 init_neo4j_schema()
+init_mongo_schema()
 
 app = FastAPI(title="Research Intelligence Platform")
 app.add_middleware(CORSMiddleware, allow_origins=["*"],

@@ -28,9 +28,11 @@ export default function App() {
   const [tab, setTab] = useState('discover')
   const [topic, setTopic] = useState('')
   const [neo4jInfo, setNeo4jInfo] = useState(null)
+  const [mongoInfo, setMongoInfo] = useState(null)
 
   useEffect(() => {
     api.neo4jStatus().then(data => setNeo4jInfo(data)).catch(() => {})
+    api.mongoStatus().then(data => setMongoInfo(data)).catch(() => {})
   }, [])
 
   return (
@@ -42,16 +44,17 @@ export default function App() {
           padding: '0 16px', height: 50, display: 'flex', alignItems: 'center',
           gap: 12, flexShrink: 0, zIndex: 100,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
             <span style={{ fontWeight: 700, fontSize: 15, color: '#58a6ff' }}>
               ⚗️ ResearchIQ
             </span>
+            {/* Neo4j Graph NoSQL Badge */}
             {neo4jInfo && (
               <span
                 title={
                   neo4jInfo.connected
-                    ? `Connected to Neo4j (${neo4jInfo.uri})\nPapers: ${neo4jInfo.stats?.papers || 0}, Relationships: ${neo4jInfo.stats?.relationships || 0}`
-                    : `Neo4j Offline (${neo4jInfo.uri || 'bolt://localhost:7687'}) - Using in-memory NetworkX`
+                    ? `Neo4j Graph NoSQL Active (${neo4jInfo.uri})\nPapers: ${neo4jInfo.stats?.papers || 0}, Relationships: ${neo4jInfo.stats?.relationships || 0}`
+                    : `Neo4j Offline (${neo4jInfo.uri || 'bolt://localhost:7687'}) - Fallback to in-memory NetworkX`
                 }
                 style={{
                   fontSize: 11,
@@ -72,6 +75,36 @@ export default function App() {
                   display: 'inline-block'
                 }}></span>
                 Neo4j {neo4jInfo.connected ? 'Active' : 'Offline'}
+              </span>
+            )}
+
+            {/* MongoDB Document NoSQL Badge */}
+            {mongoInfo && (
+              <span
+                title={
+                  mongoInfo.connected
+                    ? `MongoDB Document NoSQL Active (${mongoInfo.db})\nPapers: ${mongoInfo.stats?.papers || 0}, Reports: ${mongoInfo.stats?.reports || 0}`
+                    : `MongoDB Offline - Using SQLite Baseline`
+                }
+                style={{
+                  fontSize: 11,
+                  padding: '2px 8px',
+                  borderRadius: 12,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: mongoInfo.connected ? 'rgba(16,185,129,0.12)' : 'rgba(139,148,158,0.12)',
+                  color: mongoInfo.connected ? '#10b981' : '#8b949e',
+                  border: `1px solid ${mongoInfo.connected ? 'rgba(16,185,129,0.3)' : 'rgba(139,148,158,0.25)'}`,
+                  cursor: 'help'
+                }}
+              >
+                <span style={{
+                  width: 6, height: 6, borderRadius: '50%',
+                  background: mongoInfo.connected ? '#10b981' : '#8b949e',
+                  display: 'inline-block'
+                }}></span>
+                Mongo {mongoInfo.connected ? 'Active' : 'Offline'}
               </span>
             )}
           </div>

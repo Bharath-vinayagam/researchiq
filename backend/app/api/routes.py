@@ -10,7 +10,7 @@ from app.db.database import (
     save_report, save_search, get_reports, get_searches,
     get_report_by_id
 )
-from app.db import neo4j_client
+from app.db import neo4j_client, mongo_client
 
 router = APIRouter(prefix="/api")
 
@@ -176,7 +176,7 @@ def reports():
     return get_reports()
 
 @router.get("/reports/{rid}")
-def report(rid: int):
+def report(rid: str):
     r = get_report_by_id(rid)
     if not r:
         raise HTTPException(404, "Not found")
@@ -209,4 +209,31 @@ def neo4j_topic_graph(topic: str):
     if not g:
         raise HTTPException(404, f"No graph found in Neo4j for topic: {topic}")
     return g
+
+
+# ── MongoDB Document Store & Polyglot NoSQL ──────────────────────────────
+@router.get("/mongodb/status")
+def mongodb_status():
+    return mongo_client.get_mongo_stats()
+
+@router.get("/nosql/status")
+def nosql_status():
+    return {
+        "architecture": "Polyglot NoSQL Architecture",
+        "document_store": {
+            "engine": "MongoDB",
+            "role": "Semi-structured papers, searches, reports, and chat sessions",
+            **mongo_client.get_mongo_stats()
+        },
+        "graph_store": {
+            "engine": "Neo4j",
+            "role": "Citation networks, co-authorship links, and knowledge graphs",
+            **neo4j_client.get_neo4j_stats()
+        },
+        "relational_baseline": {
+            "engine": "SQLite",
+            "role": "Local baseline persistence and offline fallback"
+        }
+    }
+
 

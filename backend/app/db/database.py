@@ -1,4 +1,5 @@
 import sqlite3, json, os, tempfile
+from typing import Any
 
 DB_PATH = os.path.join(tempfile.gettempdir(), "riq_platform.db")
 
@@ -51,9 +52,17 @@ def init_db():
         pass
     con.commit(); con.close()
 
+from app.db import mongo_client
+
 def _con(): return sqlite3.connect(DB_PATH)
 
 def save_search(query: str, papers: list, repos: list):
+    # Persist in MongoDB document store if available
+    try:
+        mongo_client.save_search_mongo(query, papers, repos)
+    except Exception:
+        pass
+
     con = _con()
     try:
         con.execute(
@@ -65,6 +74,12 @@ def save_search(query: str, papers: list, repos: list):
         con.close()
 
 def save_report(topic: str, rtype: str, content: str, repos: list = None, papers: list = None):
+    # Persist in MongoDB document store if available
+    try:
+        mongo_client.save_report_mongo(topic, rtype, content, repos=repos, papers=papers)
+    except Exception:
+        pass
+
     con = _con()
     try:
         con.execute(
@@ -76,6 +91,10 @@ def save_report(topic: str, rtype: str, content: str, repos: list = None, papers
         con.close()
 
 def get_reports(limit=50):
+    mongo_reports = mongo_client.get_reports_mongo(limit=limit)
+    if mongo_reports:
+        return mongo_reports
+
     con = _con(); con.row_factory = sqlite3.Row
     rows = con.execute(
         "SELECT id,topic,report_type,created_at FROM reports ORDER BY created_at DESC LIMIT ?",
@@ -85,6 +104,10 @@ def get_reports(limit=50):
     return [dict(r) for r in rows]
 
 def get_searches(limit=30):
+    mongo_searches = mongo_client.get_searches_mongo(limit=limit)
+    if mongo_searches:
+        return mongo_searches
+
     con = _con(); con.row_factory = sqlite3.Row
     rows = con.execute(
         "SELECT id,query,repos_json,created_at FROM searches ORDER BY created_at DESC LIMIT ?",
@@ -99,11 +122,24 @@ def get_searches(limit=30):
         result.append(d)
     return result
 
-def get_report_by_id(rid: int):
+def get_report_by_id(rid: Any):
+    # Try MongoDB first if rid is string/ObjectId
+    if isinstance(rid, str) and not rid.isdigit():
+        doc = mongo_client.get_report_by_id_mongo(rid)
+        if doc:
+            return doc
+
     con = _con(); con.row_factory = sqlite3.Row
-    row = con.execute("SELECT * FROM reports WHERE id=?", (rid,)).fetchone()
+    try:
+        numeric_id = int(rid)
+    except Exception:
+        numeric_id = -1
+
+    row = con.execute("SELECT * FROM reports WHERE id=?", (numeric_id,)).fetchone()
     con.close()
-    if not row: return None
+    if not row:
+        # Final attempt with MongoDB if not found in SQLite
+        return mongo_client.get_report_by_id_mongo(str(rid))
     d = dict(row)
     for key in ('repos_json', 'papers_json'):
         try:
