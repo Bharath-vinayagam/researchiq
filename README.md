@@ -1,408 +1,194 @@
-# 🔬 ResearchIQ —MCP-Powered Research Intelligence Platform
+# 🔬 ResearchIQ — MCP-Powered AI Research Intelligence Platform
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue)
-![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green)
-![React](https://img.shields.io/badge/React-Frontend-61DAFB)
-![Groq](https://img.shields.io/badge/Groq-Llama3-purple)
-![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-red)
-![NetworkX](https://img.shields.io/badge/NetworkX-KnowledgeGraph-orange)
-![SQLite](https://img.shields.io/badge/SQLite-Database-blue)
+![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
+![Neo4j AuraDB](https://img.shields.io/badge/Neo4j-AuraDB%20Graph-008CC1?logo=neo4j)
+![MongoDB Atlas](https://img.shields.io/badge/MongoDB-Atlas%20NoSQL-47A248?logo=mongodb)
+![Hugging Face](https://img.shields.io/badge/Hugging%20Face-Hub%20MCP-FFD21E?logo=huggingface)
+![Groq](https://img.shields.io/badge/Groq-Inference-F05032)
+![Model Context Protocol](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-red)
 
-ResearchIQ is a MCP-powered Research Intelligence Platform that enables researchers, students, and developers to discover, analyze, compare, and understand academic literature using AI.
+**ResearchIQ** is a state-of-the-art Research Intelligence Platform that enables researchers, students, and engineers to discover, synthesize, analyze, and cross-examine academic literature using AI.
 
-The platform leverages the **Model Context Protocol (MCP)** to connect Large Language Models with external research systems such as **ArXiv**, **Semantic Scholar**, and **GitHub**, allowing the AI agent to retrieve real-time research knowledge before generating insights.
+Powered by the **Model Context Protocol (MCP)**, ResearchIQ connects Large Language Models to live external research ecosystems: **ArXiv** (2.4M+ preprints), **Semantic Scholar** (citation networks), **GitHub** (code implementations), and the **Hugging Face Hub** (open-weights models and benchmark datasets).
 
-By combining MCP servers, Retrieval-Augmented Generation (RAG), Knowledge Graphs, and Groq-powered LLMs, ResearchIQ transforms scattered research information into actionable intelligence through a single unified interface.
-
----
-
-# 🚀 Features
-
-### 🔍 Multi-Source Research Discovery
-
-Search across multiple research ecosystems simultaneously:
-
-* ArXiv
-* Semantic Scholar
-* GitHub Repositories
-
-Features:
-
-* Parallel retrieval
-* Paper deduplication
-* Metadata enrichment
-* Repository discovery
-* Unified search experience
+With a **Tri-Engine Polyglot NoSQL Architecture** (Neo4j AuraDB + MongoDB Atlas + SQLite), an **In-Memory Full PDF Deep RAG Engine** with exact page citations, and a **Graph Centrality Engine** (PageRank, Betweenness Centrality, Community Detection), ResearchIQ transforms scattered academic knowledge into actionable intelligence through a unified cockpit.
 
 ---
 
-### 🔌 MCP-Powered Tool Calling
+## 🚀 Key Innovations & Features
 
-ResearchIQ uses MCP servers to expose external research systems as AI-accessible tools.
+### 1. 🔌 Multi-Source MCP Ecosystem
+ResearchIQ exposes external scientific databases as AI-accessible tool providers via the Model Context Protocol:
 
-Connected MCP Servers:
-
-| MCP Server           | Purpose                              |
-| -------------------- | ------------------------------------ |
-| ArXiv MCP            | Research paper discovery             |
-| Semantic Scholar MCP | Citation and metadata retrieval      |
-| GitHub MCP           | Open-source implementation discovery |
-
-Benefits:
-
-* Real-time information retrieval
-* Tool-augmented reasoning
-* Reduced hallucinations
-* Source-grounded outputs
-* Extensible architecture
+| MCP Server | Ecosystem | Capabilities |
+|---|---|---|
+| **ArXiv MCP** | 2.4M+ Preprints | Real-time paper discovery, metadata extraction, and in-memory direct full PDF streaming. |
+| **Semantic Scholar MCP** | Citation Network | Real-time citation counts, influential citations, reference trees, and author graphs. |
+| **GitHub MCP** | Open-Source Code | Discovers star-ranked open-source code repositories implementing the paper methods. |
+| **Hugging Face Hub MCP** | AI Artifacts | Discovers pretrained model weights (with download metrics, task pipeline tags, 1-click Python snippets) and benchmark evaluation datasets. |
 
 ---
 
-### 📚 Literature Review Generator
+### 2. 🗄️ Tri-Engine Polyglot NoSQL Architecture
+Research data is heterogeneous: papers have rich document schemas, citations form directed graphs, and application states need lightweight relational fallbacks.
 
-Automatically generates structured academic literature reviews.
-
-Outputs include:
-
-* Research Background
-* Existing Approaches
-* Comparative Analysis
-* Key Findings
-* Limitations
-* Future Directions
-
-Powered by Groq Llama 3.3 70B.
+- **Neo4j AuraDB (Graph NoSQL):** Models scientific relationships.
+  - Nodes: `(p:Paper)`, `(t:Topic)`, `(a:Author)`, `(r:Repository)`, `(m:Model)`, `(d:Dataset)`.
+  - Relationships: `[:COVERS]`, `[:AUTHORED]`, `[:CITES]`, `[:HAS_IMPLEMENTATION]`, `[:HAS_MODEL]`, `[:USES_DATASET]`.
+- **MongoDB Atlas (Document NoSQL):** High-throughput JSON document store for raw paper payloads, multi-section surveys, and search history.
+- **SQLite 3 (Relational Baseline):** Embedded local persistence ensuring zero-downtime offline fallback if cloud credentials are absent.
 
 ---
 
-### 📝 Research Survey Generator
+### 3. 📄 "Chat with the Full PDF" (Deep Paper RAG)
+Traditional RAG systems index only brief abstracts, losing equations, benchmarks, and hyperparameter tables.
 
-Create comprehensive surveys covering:
-
-* Introduction
-* Background
-* State of the Art
-* Key Methods
-* Datasets
-* Evaluation Metrics
-* Current Trends
-* Conclusion
+- **Zero-Disk In-Memory Parsing:** Downloads PDFs directly from ArXiv's CDN via `aiohttp` or handles drag-and-drop local uploads via `pypdf` streams in RAM (`io.BytesIO`).
+- **Sliding-Window Semantic Chunking:** Slices full text into 700-character windows with 120-character overlapping boundaries to preserve mathematical proofs across chunk edges.
+- **Exact Page-Level Citations:** Retains 1-indexed document page numbers (`page: 5`). Answers generated by the Groq LLM explicitly cite source pages:
+  > *"The multi-head attention mechanism uses 8 parallel attention heads with dimension $d_k = 64$. `📄 Page 5`"*
+- **Retrieved Excerpts Drawer:** Interactive accordion allowing users to inspect the exact grounded excerpts with page tags.
 
 ---
 
-### 🎯 Research Gap Detection
+### 4. 🕸️ Neo4j Graph Intelligence & Centrality
+Located in the dedicated **`🕸️ Graph Intel`** cockpit:
 
-Identify:
-
-* Underexplored problems
-* Missing evaluations
-* Dataset limitations
-* Novel opportunities
-* Future research directions
-
----
-
-### 🌐 Interactive Knowledge Graph
-
-Visualize relationships among:
-
-* Papers
-* Authors
-* Topics
-* Citations
-* Repositories
-
-Built using D3.js and NetworkX.
+- **PageRank ($\alpha=0.85$):** Calculates recursive scientific prestige (papers cited by other seminal papers).
+- **Betweenness Centrality:** Discovers cross-disciplinary "bridge papers" that link disparate research domains.
+- **In-Degree Centrality:** Measures raw direct citation density within the active graph.
+- **HITS (Hubs & Authorities):** Distinguishes cornerstone foundational literature from survey papers.
+- **Greedy Modularity Community Detection:** Automatically partitions the citation graph into distinct sub-topics without manual labeling.
+- **Influential Researchers Leaderboard:** Aggregates paper PageRank scores across author edges to identify leading domain scientists.
+- **1-Click Neo4j Write-Back:** Persists computed PageRank and Betweenness metrics directly into `(p:Paper)` nodes in Neo4j AuraDB (`POST /api/graph/sync_metrics`).
 
 ---
 
-### ⚖️ Paper Comparison Engine
-
-Compare research papers across:
-
-* Problem Statement
-* Methodology
-* Dataset
-* Results
-* Novel Contributions
-* Limitations
-
-Ideal for literature analysis and academic reviews.
+### 5. 🤖 Automated Research Synthesizers
+- **📖 Literature Review Generator:** Synthesizes state-of-the-art papers, core methods, and findings with Markdown export.
+- **📚 Research Survey Generator:** Multi-section taxonomy, timeline, research gaps, interactive knowledge graph, and Markdown export.
+- **💡 Research Gap Detector:** Scans literature to uncover unresolved questions, missing benchmarks, and future opportunities.
+- **⚖️ Head-to-Head Comparison:** Side-by-side comparative matrix of two architectures across methodology, datasets, and trade-offs.
+- **🗺️ Research Roadmap Generator:** 4-Phase milestone learning curriculum with recommended papers, tasks, and skills.
+- **🗂️ Multi-Cloud History Archive:** Persistent storage across MongoDB Atlas and SQLite for all previous reports and queries.
 
 ---
 
-### 💬 Chat with Papers
-
-Ask natural language questions about research papers.
-
-Capabilities:
-
-* Context-aware responses
-* Paper-grounded reasoning
-* Research assistance
-* Citation-based answers
-
-Powered by Retrieval-Augmented Generation (RAG).
-
----
-
-### 🗺️ Research Roadmap Generator
-
-Generate personalized learning roadmaps:
-
-1. Foundations
-2. Core Concepts
-3. Advanced Topics
-4. Research Contributions
-
-Includes relevant papers and implementation repositories.
-
----
-
-### 🗄️ Research History
-
-Stores:
-
-* Searches
-* Literature Reviews
-* Surveys
-* Gap Reports
-* Learning Roadmaps
-
-using SQLite persistence.
-
----
-
-# 🎯 Why MCP?
-
-Traditional AI research assistants rely on static model knowledge and quickly become outdated.
-
-ResearchIQ adopts the **Model Context Protocol (MCP)**, enabling AI agents to interact with live research systems as external tools.
-
-Benefits of MCP:
-
-✅ Real-time paper retrieval
-
-✅ Access to latest publications
-
-✅ Citation-aware reasoning
-
-✅ Repository discovery
-
-✅ Extensible architecture
-
-✅ Reduced hallucinations
-
-✅ Research-grounded outputs
-
-This makes ResearchIQ a true AI research copilot rather than a simple paper summarization system.
-
----
-
-# 🏗️ MCP Architecture
+## 🏗️ Architecture & Data Flow
 
 ```text
-                          User Query
-                               │
-                               ▼
-
-                  ┌─────────────────────┐
-                  │    React Frontend   │
-                  └──────────┬──────────┘
-                             │
-                             ▼
-
-                  ┌─────────────────────┐
-                  │   FastAPI Backend   │
-                  └──────────┬──────────┘
-                             │
-                             ▼
-
-                  ┌─────────────────────┐
-                  │ Research AI Agent   │
-                  │ Groq Llama 3.3 70B  │
-                  └──────────┬──────────┘
-                             │
-
-        ┌────────────────────┼────────────────────┐
-        │                    │                    │
-        ▼                    ▼                    ▼
-
- ┌───────────────┐   ┌───────────────┐   ┌───────────────┐
- │   ArXiv MCP   │   │ Semantic MCP  │   │  GitHub MCP   │
- │    Server     │   │    Server     │   │    Server     │
- └───────┬───────┘   └───────┬───────┘   └───────┬───────┘
-         │                   │                   │
-         ▼                   ▼                   ▼
-
-     Research          Citation Data      Open Source
-      Papers             Metadata      Implementations
-
-         └───────────────┬────────────────┘
-                         ▼
-
-                ┌──────────────────┐
-                │ Context Builder  │
-                └────────┬─────────┘
-                         │
-
-        ┌────────────────┴────────────────┐
-        ▼                                 ▼
-
- ┌─────────────────┐             ┌─────────────────┐
- │ Knowledge Graph │             │    RAG Store    │
- │   (NetworkX)    │             │ Context Engine  │
- └────────┬────────┘             └────────┬────────┘
-          │                               │
-          └──────────────┬────────────────┘
-                         ▼
-
-                ┌──────────────────┐
-                │ Insight Engine   │
-                └────────┬─────────┘
-                         ▼
-
-       Reviews • Surveys • Gaps • Chat • Roadmaps
+                           User Search / Question
+                                     │
+                                     ▼
+                   ┌───────────────────────────────────┐
+                   │    React 18 + Vite Cockpit        │
+                   │ (D3.js Force Simulation + CSS)    │
+                   └─────────────────┬─────────────────┘
+                                     │
+                                     ▼
+                   ┌───────────────────────────────────┐
+                   │     FastAPI Backend Router        │
+                   └─────────────────┬─────────────────┘
+                                     │
+         ┌───────────────────────────┼───────────────────────────┐
+         ▼                           ▼                           ▼
+  ┌──────────────┐            ┌──────────────┐            ┌──────────────┐
+  │  LangChain   │            │  PDF Engine  │            │    Graph     │
+  │  Agent Engine│            │(Sliding RAG) │            │  Analytics   │
+  │(Groq Llama3) │            │ (pypdf/RAM)  │            │ (PageRank)   │
+  └──────┬───────┘            └──────┬───────┘            └──────┬───────┘
+         │                           │                           │
+         └───────────────────────────┼───────────────────────────┘
+                                     │
+         ┌───────────────────────────┴───────────────────────────┐
+         ▼                                                       ▼
+ ┌───────────────┐                                       ┌───────────────┐
+ │ MCP Providers │                                       │ Polyglot NoSQL│
+ ├───────────────┤                                       ├───────────────┤
+ │• ArXiv        │                                       │• Neo4j AuraDB │
+ │• Scholar      │                                       │• Mongo Atlas  │
+ │• GitHub       │                                       │• SQLite 3     │
+ │• Hugging Face │                                       └───────────────┘
+ └───────────────┘
 ```
 
 ---
 
-# 🔄 Research Workflow
+## 🛠️ Tech Stack
 
-```text
-Research Topic
-      │
-      ▼
-MCP-Based Paper Discovery
-(ArXiv + Semantic Scholar + GitHub)
-      │
-      ▼
-Aggregation & Deduplication
-      │
-      ▼
-Knowledge Graph Construction
-      │
-      ▼
-RAG Context Creation
-      │
-      ▼
-Groq LLM Analysis
-      │
-      ▼
-Review / Survey / Gap Detection
-      │
-      ▼
-SQLite Persistence
-      │
-      ▼
-Interactive Insights
-```
+| Layer | Technologies |
+|---|---|
+| **Frontend** | React 18, Vite, D3.js (v7), Custom Glassmorphic Dark UI |
+| **Backend** | FastAPI, Python 3.11, Uvicorn (ASGI), Pydantic v2 |
+| **LLM Inference** | Groq Cloud (`openai/gpt-oss-120b` / Llama 3.3 70B), LangChain |
+| **Graph NoSQL** | Neo4j AuraDB (Cypher, GDS, Constraints) |
+| **Document NoSQL** | MongoDB Atlas (`pymongo`, `dnspython`) |
+| **Relational Baseline** | SQLite 3 |
+| **PDF Extraction** | `pypdf`, `io.BytesIO` (Zero-disk RAM streams) |
+| **Graph Analytics** | NetworkX (PageRank, Betweenness Centrality, Modularity) |
+| **External APIs** | ArXiv API, Semantic Scholar Graph API, GitHub REST API, Hugging Face Hub API |
+| **Async Networking** | `aiohttp` |
 
 ---
 
-# 📸 Screenshots
-
-## 🏠 Research Discovery
-
-![Research Discovery](screenshots/home-discover.png)
-
----
-
-## 📦 GitHub Repository Discovery
-
-![GitHub Repository Discovery](screenshots/github-repo-discover.png)
-
----
-
-## 📚 Literature Review Generator
-
-![Literature Review Generator](screenshots/literature-review-generator.png)
-
----
-
-## 📄 Research Survey Generation
-
-![Research Survey](screenshots/survey.png)
-
----
-
-## 🌐 Knowledge Graph Visualization
-
-![Knowledge Graph](screenshots/graph.png)
-
----
-
-## ⚖️ Paper Comparison
-
-![Paper Comparison](screenshots/paper-compare.png)
-
----
-
-## 💬 Chat with Papers
-
-![Chat with Papers](screenshots/chat.png)
-
----
-
-# 🛠️ Tech Stack
-
-| Component        | Technology                      |
-| ---------------- | ------------------------------- |
-| Frontend         | React, Vite                     |
-| Backend          | FastAPI                         |
-| Language         | Python                          |
-| LLM              | Llama 3.3 70B                   |
-| Inference        | Groq                            |
-| Protocol         | Model Context Protocol (MCP)    |
-| Knowledge Graph  | NetworkX                        |
-| Visualization    | D3.js                           |
-| Database         | SQLite                          |
-| APIs             | ArXiv, Semantic Scholar, GitHub |
-| Async Processing | aiohttp                         |
-| Validation       | Pydantic                        |
-| RAG Engine       | Custom Context Retrieval        |
-
----
-
-# 📂 Project Structure
+## 📂 Project Structure
 
 ```text
 research-intelligence-platform/
 │
 ├── backend/
 │   ├── app/
-│   │   ├── api/
 │   │   ├── agents/
+│   │   │   └── research_agent.py      # LLM reasoning, reviews, surveys, roadmaps
+│   │   ├── analytics/
+│   │   │   └── graph_analytics.py     # PageRank, Betweenness Centrality, Communities
+│   │   ├── api/
+│   │   │   └── routes.py              # REST API endpoints
+│   │   ├── db/
+│   │   │   ├── database.py            # SQLite relational baseline
+│   │   │   ├── mongo_client.py        # MongoDB Atlas document NoSQL
+│   │   │   └── neo4j_client.py        # Neo4j AuraDB graph NoSQL
 │   │   ├── mcp/
-│   │   │   ├── arxiv.py
-│   │   │   ├── semantic_scholar.py
-│   │   │   └── github.py
-│   │   │
-│   │   ├── services/
+│   │   │   ├── arxiv.py               # ArXiv MCP preprint fetcher
+│   │   │   ├── semantic_scholar.py    # Semantic Scholar citation graph
+│   │   │   ├── github.py              # GitHub repo discovery
+│   │   │   └── huggingface.py         # Hugging Face Hub models & datasets
 │   │   ├── rag/
-│   │   └── db/
-│   │
+│   │   │   ├── pdf_engine.py          # In-memory sliding-window full PDF RAG
+│   │   │   └── vectorstore.py         # In-memory TF-IDF / BM25 index
+│   │   ├── services/
+│   │   │   └── graph.py               # NetworkX graph builder
+│   │   └── main.py                    # FastAPI application initialization
 │   └── requirements.txt
 │
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
+│   │   │   ├── Graph.jsx              # D3.js force-directed knowledge graph
+│   │   │   ├── HFArtifacts.jsx        # ModelCard & DatasetCard components
+│   │   │   ├── PaperCard.jsx          # Academic paper cards
+│   │   │   ├── RepoList.jsx           # GitHub repository cards
+│   │   │   └── Spinner.jsx            # Loading indicators
 │   │   ├── pages/
-│   │   └── services/
-│   │
-│   └── package.json
+│   │   │   ├── Discover.jsx           # Multi-source paper, model & repo search
+│   │   │   ├── GraphAnalytics.jsx     # Neo4j PageRank & Centrality cockpit
+│   │   │   ├── Chat.jsx               # Full PDF Deep RAG & ArXiv Q&A
+│   │   │   ├── Review.jsx             # Literature review generator
+│   │   │   ├── Survey.jsx             # Comprehensive survey generator
+│   │   │   ├── Gaps.jsx               # Research gap detector
+│   │   │   ├── Compare.jsx            # Head-to-head paper comparison
+│   │   │   ├── Roadmap.jsx            # Research learning roadmap generator
+│   │   │   └── History.jsx            # Dual-database report archive
+│   │   ├── services/
+│   │   │   └── api.js                 # Frontend API client
+│   │   ├── App.jsx                    # Root layout & navigation
+│   │   └── index.css                  # Custom dark design system tokens
+│   ├── package.json
+│   └── vite.config.js
 │
-├── screenshots/
-│   ├── home-discover.png
-│   ├── github-repo-discover.png
-│   ├── literature-review-generator.png
-│   ├── survey.png
-│   ├── graph.png
-│   ├── paper-compare.png
-│   └── chat.png
-│
-├── data/
-├── run.py
+├── run.py                             # Development server runner
 ├── README.md
 ├── .env.example
 └── .gitignore
@@ -410,141 +196,72 @@ research-intelligence-platform/
 
 ---
 
-# ⚙️ Installation
+## ⚙️ Quickstart Installation
 
-## 1️⃣ Clone Repository
-
+### 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/research-intelligence-platform.git
-
-cd research-intelligence-platform
+git clone https://github.com/Bharath-vinayagam/researchiq.git
+cd researchiq
 ```
 
----
-
-## 2️⃣ Create Virtual Environment
-
-### Windows
-
+### 2️⃣ Create & Activate Virtual Environment
 ```bash
+# Windows
 python -m venv venv
-
 venv\Scripts\activate
-```
 
-### Linux / macOS
-
-```bash
+# Linux / macOS
 python3 -m venv venv
-
 source venv/bin/activate
 ```
 
----
-
-## 3️⃣ Install Backend Dependencies
-
+### 3️⃣ Install Dependencies
 ```bash
 pip install -r backend/requirements.txt
-```
-
----
-
-## 4️⃣ Install Frontend Dependencies
-
-```bash
 cd frontend
-
 npm install
-
 npm run build
-
 cd ..
 ```
 
----
-
-## 5️⃣ Configure Environment Variables
-
-Create a `.env` file:
-
+### 4️⃣ Configure Environment Variables
+Copy `.env.example` to `.env`:
 ```env
-GROQ_API_KEY=your_groq_api_key
-GITHUB_TOKEN=optional
+# Groq LLM
+GROQ_API_KEY=gsk_your_groq_api_key
+GROQ_MODEL=openai/gpt-oss-120b
+
+# Neo4j AuraDB (Cloud Graph NoSQL)
+NEO4J_URI=neo4j+s://your-instance.databases.neo4j.io
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=your_neo4j_password
+
+# MongoDB Atlas (Cloud Document NoSQL)
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority
+MONGODB_DATABASE=researchiq
+
+# External MCP Tokens (Optional but recommended)
+GITHUB_TOKEN=ghp_your_github_token
+HUGGINGFACE_TOKEN=hf_your_huggingface_token
+SEMANTIC_SCHOLAR_API_KEY=optional_key
 ```
 
-Get a free API key from:
-
-https://console.groq.com
-
----
-
-## 6️⃣ Run the Application
-
+### 5️⃣ Run the Application
 ```bash
 python run.py
 ```
-
-Open:
-
-```text
-http://127.0.0.1:8000
-```
+Open **`http://127.0.0.1:8000`** in your browser.
 
 ---
 
-# 💡 Example Use Cases
+## 👨‍💻 Author
 
-```text
-Generate a literature review on Retrieval-Augmented Generation
-```
-
-```text
-Find research gaps in Multimodal Large Language Models
-```
-
-```text
-Compare Vision Transformers and CNN-based architectures
-```
-
-```text
-Generate a survey on Graph Neural Networks
-```
-
-```text
-Create a research roadmap for Reinforcement Learning
-```
-
-```text
-Find GitHub implementations related to Diffusion Models
-```
+**Bharath**  
+B.Tech Computer Science and Engineering  
+VIT Chennai  
+- **GitHub:** [@Bharath-vinayagam](https://github.com/Bharath-vinayagam)  
+- **Repository:** [researchiq](https://github.com/Bharath-vinayagam/researchiq.git)  
 
 ---
 
-# 🎯 Future Enhancements
-
-* Persistent Vector Database
-* Citation Network Analysis
-* PDF Research Assistant
-* Multi-Agent Research Workflows
-* Zotero Integration
-* CrossRef MCP Integration
-* PubMed MCP Integration
-* Semantic Search
-* BibTeX Export
-* LaTeX Report Generation
-* Research Recommendation Engine
-
----
-
-# 👨‍💻 Author
-
-**Bharath**
-
-B.Tech Computer Science and Engineering
-
-VIT Chennai
-
----
-
-⭐ If you found this project useful, consider giving it a star.
+⭐ *If you find ResearchIQ helpful, give it a star on GitHub!*
