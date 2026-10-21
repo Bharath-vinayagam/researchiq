@@ -240,10 +240,10 @@ NEO4J_PASSWORD=your_neo4j_password
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority
 MONGODB_DATABASE=researchiq
 
-# External MCP Tokens (Optional but recommended)
-GITHUB_TOKEN=ghp_your_github_token
-HUGGINGFACE_TOKEN=hf_your_huggingface_token
-SEMANTIC_SCHOLAR_API_KEY=optional_key
+# External MCP Tokens (100% Optional - Public APIs work out-of-the-box without keys)
+GITHUB_TOKEN=your_github_token_here_optional
+HUGGINGFACE_TOKEN=your_hf_token_here_optional
+SEMANTIC_SCHOLAR_API_KEY=your_key_here_optional
 ```
 
 ### 5️⃣ Run the Application
