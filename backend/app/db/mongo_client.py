@@ -5,20 +5,26 @@ from datetime import datetime
 from pymongo import MongoClient
 from pymongo.collection import Collection
 
+from dotenv import load_dotenv
+
 logger = logging.getLogger("mongo_client")
 
 _client: Optional[MongoClient] = None
+_last_uri: Optional[str] = None
 
 def _get_config():
+    dotenv_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", ".env")
+    if os.path.exists(dotenv_path):
+        load_dotenv(dotenv_path, override=True)
     uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
     db_name = os.getenv("MONGODB_DB_NAME", "researchiq")
     return uri, db_name
 
 def get_mongo_client() -> Optional[MongoClient]:
-    global _client
-    if _client is not None:
-        return _client
+    global _client, _last_uri
     uri, _ = _get_config()
+    if _client is not None and _last_uri == uri:
+        return _client
     try:
         _client = MongoClient(
             uri,
@@ -26,6 +32,7 @@ def get_mongo_client() -> Optional[MongoClient]:
             connectTimeoutMS=3000,
             socketTimeoutMS=5000,
         )
+        _last_uri = uri
         return _client
     except Exception as e:
         logger.warning(f"Could not initialize MongoDB client: {e}")
