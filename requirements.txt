@@ -7,7 +7,7 @@ python-multipart==0.0.9
 aiohttp==3.9.3
 requests==2.31.0
 
-pydantic==2.6.4
+pydantic>=2.7.0
 pypdf==4.1.0
 
 langgraph

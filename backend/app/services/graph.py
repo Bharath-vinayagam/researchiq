@@ -40,7 +40,12 @@ def build_knowledge_graph(topic: str, papers: list, repos: list = [], models: li
         for n in G.nodes: G.nodes[n]["centrality"] = round(scores.get(n,0.05),3)
     except: pass
 
-    return nx.node_link_data(G)
+    data = nx.node_link_data(G)
+    # Ensure backward and frontend compatibility with both 'links' and 'edges' (NetworkX 3 uses edges)
+    edges = data.get("edges", []) or data.get("links", [])
+    data["links"] = edges
+    data["edges"] = edges
+    return data
 
 def build_citation_graph(paper_title: str, citation_data: dict) -> dict:
     G = nx.DiGraph()
@@ -55,4 +60,8 @@ def build_citation_graph(paper_title: str, citation_data: dict) -> dict:
         if t:
             G.add_node(t, type="reference")
             G.add_edge(t, paper_title, relation="references")
-    return nx.node_link_data(G)
+    data = nx.node_link_data(G)
+    edges = data.get("edges", []) or data.get("links", [])
+    data["links"] = edges
+    data["edges"] = edges
+    return data

@@ -47,7 +47,8 @@ export default function Graph({ data, height = 420 }) {
 
       const nodes = data.nodes.map(n => ({ ...n }))
       const nodeSet = new Set(nodes.map(n => n.id))
-      const links = (data.links || [])
+      const rawLinks = data.links || data.edges || []
+      const links = rawLinks
         .map(l => ({ ...l }))
         .filter(l => {
           const s = typeof l.source === 'object' ? l.source.id : l.source
@@ -56,21 +57,27 @@ export default function Graph({ data, height = 420 }) {
         })
 
       const sim = d3.forceSimulation(nodes)
-        .force('link', d3.forceLink(links).id(d => d.id).distance(120).strength(0.8))
-        .force('charge', d3.forceManyBody().strength(-350))
+        .force('link', d3.forceLink(links).id(d => d.id).distance(90).strength(0.7))
+        .force('charge', d3.forceManyBody().strength(-220))
         .force('center', d3.forceCenter(W / 2, H / 2))
-        .force('x', d3.forceX(W / 2).strength(0.05))
-        .force('y', d3.forceY(H / 2).strength(0.05))
-        .force('collision', d3.forceCollide(d => (SIZES[d.type] || 9) + 8))
+        .force('x', d3.forceX(W / 2).strength(0.06))
+        .force('y', d3.forceY(H / 2).strength(0.06))
+        .force('collision', d3.forceCollide(d => (SIZES[d.type] || 9) + 10))
 
-      // Links
+      // Links with crisp, distinct colors matching relationships
       const linkEl = g.append('g')
         .selectAll('line')
         .data(links)
         .enter().append('line')
-        .attr('stroke', '#30363d')
-        .attr('stroke-width', 1.5)
-        .attr('stroke-opacity', 0.8)
+        .attr('stroke', d => {
+          if (d.relation === 'authored') return '#e3b341'
+          if (d.relation === 'model') return '#ff9d00'
+          if (d.relation === 'dataset') return '#00b4d8'
+          if (d.relation === 'implementation') return '#bc8cff'
+          return '#58a6ff'
+        })
+        .attr('stroke-width', 1.8)
+        .attr('stroke-opacity', 0.65)
 
       // Nodes
       const nodeEl = g.append('g')
