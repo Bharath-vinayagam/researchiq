@@ -451,3 +451,4 @@ export default function CitationModal({ paper, onClose, onAuthorClick, onSelectP
     </div>
   )
 }
+

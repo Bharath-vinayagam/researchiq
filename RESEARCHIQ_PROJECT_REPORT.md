@@ -245,3 +245,4 @@ Located in `backend/app/mcp/huggingface.py`, this module extends scientific rese
    - MongoDB Atlas latency gracefully falls back to local SQLite.
    - Citation engine seamlessly cascades through OpenAlex $\rightarrow$ Semantic Scholar $\rightarrow$ Neo4j local graph store.
    - Free Groq LLM tier uses `openai/gpt-oss-120b`, ensuring reliable quota and sub-second generation.
+
