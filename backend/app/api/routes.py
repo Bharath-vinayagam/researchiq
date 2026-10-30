@@ -6,6 +6,7 @@ from app.mcp.semantic_scholar import SemanticScholarMCP
 from app.mcp.github import GitHubMCP
 from app.mcp.huggingface import HuggingFaceMCP
 from app.services.graph import build_knowledge_graph, build_citation_graph
+from app.services.academic import get_paper_citations, search_author_portfolio
 from app.rag.vectorstore import add_papers, query as rag_query, count as rag_count
 from app.agents import research_agent as agent
 from app.db.database import (
@@ -42,6 +43,11 @@ class ChatReq(BaseModel):
 
 class CitationReq(BaseModel):
     title: str
+    limit: int = 15
+
+class AuthorSearchReq(BaseModel):
+    name: str
+    max_results: int = 15
 
 class MultiHopReq(BaseModel):
     title: str
@@ -99,10 +105,17 @@ async def search(req: SearchReq):
 # ── Citation Network ──────────────────────────────────────────────────────
 @router.post("/citations")
 async def get_citations(req: CitationReq):
-    data = await scholar.get_citations(req.title)
-    neo4j_client.save_citations_to_neo4j(req.title, data)
-    graph = build_citation_graph(req.title, data)
-    return {"data": data, "graph": graph}
+    return await get_paper_citations(req.title, req.limit)
+
+
+# ── Author Search & Portfolio ─────────────────────────────────────────────
+@router.post("/author/search")
+async def search_author(req: AuthorSearchReq):
+    return await search_author_portfolio(req.name, req.max_results)
+
+@router.get("/author")
+async def get_author(name: str, limit: int = 15):
+    return await search_author_portfolio(name, limit)
 
 
 # ── Literature Review ─────────────────────────────────────────────────────

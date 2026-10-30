@@ -45,7 +45,9 @@ async function upload(path, file) {
 export const api = {
   search:   (query, sources = ['arxiv', 'semantic_scholar'], max_results = 10) =>
               post('/search', { query, sources, max_results }),
-  citations: (title)              => post('/citations', { title }),
+  citations: (title, limit = 15) => post('/citations', { title, limit }),
+  searchAuthor: (name, max_results = 20) => post('/author/search', { name, max_results }),
+  getAuthor: (name, limit = 20) => get(`/author?name=${encodeURIComponent(name)}&limit=${limit}`),
   review:    (topic)              => post('/review',    { topic }),
   survey:    (topic)              => post('/survey',    { topic }),
   gaps:      (topic)              => post('/gaps',      { topic }),
